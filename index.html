@@ -75,7 +75,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2015/11/24/teamcity-ios-agent/">teamcity ios agent</a>
+      <a class="article-title" href="/2015/11/24/teamcity-ios-agent/">make teamcity to build ios project</a>
     </h1>
   
 
@@ -83,16 +83,47 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p><strong>team city script</strong><br>PROJECT<em>DIR=$xxxxxxxx<br>INFOPLIST_FILE=$xxxxxxx-Info.plist<br>buildNumber=$(/usr/libexec/PlistBuddy -c “Print CFBundleVersion” “${PROJECT_DIR}/${INFOPLIST_FILE}”)<br>versionNumber=$(/usr/libexec/PlistBuddy -c “Print CFBundleShortVersionString” “${PROJECT_DIR}/${INFOPLIST_FILE}”)<br>xcodebuild -workspace xxxxxxxx.xcworkspace -destination generic/platform=iOS -configuration Release -scheme xxxxxxxx_inHouse archive -archivePath xxxxxxxx_inHouse.xcarchive<br>xcodebuild -exportArchive -exportFormat ipa -archivePath xxxxxxxx_inHouse.xcarchive -exportPath “xxxxxxxx_inHouse</em>${buildNumber}.ipa” -exportProvisioningProfile “xxxxxxxx_inHouse_Rel”</p>
-<p><strong>teamcity error:user interaction is not allowed</strong><br>security unlock-keychain /Users/xxxxx/Library/Keychains/login.keychain</p>
-<p>security unlock-keychain -p PASSWORD /Users/xxxxx/Library/Keychains/iPhone.keychain</p>
+        <h2 id="启动build_agent">启动build agent</h2><p>手动启动buildagent很简单，执行</p>
+<pre><code>buildagent/bin/agent<span class="class">.sh</span> start  
+或
+buildagent/bin/agent<span class="class">.sh</span> run
+</code></pre><p>MAC OS配置agent自启动</p>
+<ol>
+<li>将<strong>path_to_buildAgent/bin/jetbrains.teamcity.BuildAgent.plist</strong>拷贝到<strong>~/Library/LaunchAgents/</strong>目录下</li>
+<li>更新<strong>jetbrains.teamcity.BuildAgent.plist</strong>文件内容,将<code>WorkingDirectory</code>字段更新为buildAgent所在目录</li>
+<li>查看<strong>jetbrains.teamcity.BuildAgent.plist</strong>文件<code>ProgramArguments</code>中第一个参数，并更新其对应的脚本文件的可执行权限</li>
+<li><p>执行(可验证重启服务是否可用)</p>
+<pre><code>launchctl load -w jetbrains<span class="class">.teamcity</span><span class="class">.BuildAgent</span><span class="class">.plist</span>
+</code></pre></li>
+</ol>
+<h2 id="teamcity_server配置">teamcity server配置</h2><h3 id="General_Settings">General Settings</h3><p>Name、Build configurationID、Description按自己需求填写即可</p>
+<p>Artifact paths中如果有文件夹的需求，需要配置一下，如</p>
+<pre><code>Project_name<span class="class">.xcarchive</span> =&gt; Project_name.xcarchive
+</code></pre><h3 id="Version_Control_Settings">Version Control Settings</h3><p>按需求填写即可，可以选择default branch</p>
+<h3 id="Build_Steps">Build Steps</h3><p>这里可以将操作分布完成，以inhouse的打包流程为例包括三步：</p>
+<ol>
+<li>Check Bunle:编译之前更新bundle文件，写好一个更新脚本，在这一步执行就好了</li>
+<li><p>Build：编译过程，执行xcodebuild脚本，并完成签名 =&gt;</p>
+<pre><code>PROJECT_DIR=YOUR_PROJECT_DIR
+INFOPLIST_FILE=YOUR_PROJECT_PLIST_NAME-Info<span class="class">.plist</span>
+buildNumber=$(/usr/libexec/PlistBuddy -c <span class="string">"Print CFBundleVersion"</span> <span class="string">"${PROJECT_DIR}/${INFOPLIST_FILE}"</span>)
+versionNumber=$(/usr/libexec/PlistBuddy -c <span class="string">"Print CFBundleShortVersionString"</span> <span class="string">"${PROJECT_DIR}/${INFOPLIST_FILE}"</span>)
+security unlock-keychain  -<span class="tag">p</span> 「login_password」 ~/Library/Keychains/login<span class="class">.keychain</span>
+xcodebuild -workspace YOUR_WORKSPACE<span class="class">.xcworkspace</span> -destination generic/platform=iOS -configuration Release -scheme YOUR_PROJECT_NAME_inHouse archive -archivePath YOUR_PROJECT_NAME_inHouse<span class="class">.xcarchive</span>
+xcodebuild -exportArchive -exportFormat ipa -archivePath YOUR_PROJECT_NAME_inHouse<span class="class">.xcarchive</span> -exportPath <span class="string">"YOUR_PROJECT_NAME_inHouse_${buildNumber}.ipa"</span> -exportProvisioningProfile <span class="string">"YOUR_CODESIGN_PROFILE_NAME"</span>
+</code></pre></li>
+<li>Upload: 编译完成将ipa文件上传至内测服务器，同样是执行上传脚本</li>
+</ol>
+<p>注：如果编译脚本跑不通，可以先用Xcode真机调试，调试完成后，本地执行下编译脚本，方便调试。另外出现任何问题，<code>Console</code>中查看系统log有助于定位问题。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2015/11/24/teamcity-ios-agent/" data-id="cihcvgqpv000109s6wmptp9bw" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2015/11/24/teamcity-ios-agent/" data-id="cihlp379w000100s6owt3h42k" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/teamcity-buildagent-ios-xcode/">teamcity buildagent ios xcode</a></li></ul>
+
     </footer>
   </div>
   
@@ -141,7 +172,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2015/09/09/Special-Sign/" data-id="cihcvgqp9000009s6q9xb0x95" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2015/09/09/Special-Sign/" data-id="cihlp379c000000s6mterbxum" class="article-share-link">Share</a>
       
       
     </footer>
@@ -168,7 +199,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2015/07/02/myfirst/" data-id="cihcvgqpz000209s64pwzulu7" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2015/07/02/myfirst/" data-id="cihlp37a5000400s6fb44c8as" class="article-share-link">Share</a>
       
       
     </footer>
@@ -213,7 +244,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2015/07/02/hello-world/" data-id="cihcvgqq0000309s69jmn2w2w" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2015/07/02/hello-world/" data-id="cihlp37a7000500s64qmciaie" class="article-share-link">Share</a>
       
       
     </footer>
@@ -231,8 +262,22 @@
     
   
     
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/teamcity-buildagent-ios-xcode/">teamcity buildagent ios xcode</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
   
     
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/teamcity-buildagent-ios-xcode/" style="font-size: 10px;">teamcity buildagent ios xcode</a>
+    </div>
+  </div>
+
   
     
   <div class="widget-wrap">
@@ -250,7 +295,7 @@
       <ul>
         
           <li>
-            <a href="/2015/11/24/teamcity-ios-agent/">teamcity ios agent</a>
+            <a href="/2015/11/24/teamcity-ios-agent/">make teamcity to build ios project</a>
           </li>
         
           <li>
